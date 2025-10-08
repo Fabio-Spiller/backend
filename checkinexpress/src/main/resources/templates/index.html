@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check-in Express</title>
+    <!-- Bootstrap local - CAMINHO CORRIGIDO -->
+    <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+    <!-- CSS customizado - CAMINHO CORRIGIDO -->
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="d-flex align-items-center py-4 bg-body-tertiary">
+
+<main class="container text-center" style="max-width: 600px;">
+    <div class="card p-5 shadow">
+        <h1 class="h3 mb-3 fw-normal">Bem-vindo ao Check-in Express!</h1>
+        <p class="mb-4">Seu sistema de gestão simplificado.</p>
+
+        <!-- Seção para usuários não logados -->
+        <div id="user-guest">
+            <div class="d-grid gap-2">
+                <!-- Links corrigidos para usar as rotas do WebController -->
+                <a href="/login" class="btn btn-primary btn-lg">Fazer Login</a>
+                <a href="/cadastro" class="btn btn-secondary">Não tenho conta</a>
+            </div>
+        </div>
+
+        <!-- Seção para usuários logados -->
+        <div id="user-logged-in" class="d-none align-items-center justify-content-center flex-column">
+            <img id="user-avatar" src="https://placehold.co/80x80/ced4da/6c757d?text=Avatar" class="rounded-circle mb-3" alt="Avatar do Usuário" style="width: 80px; height: 80px;">
+            <h2 id="user-name" class="h5">Olá!</h2>
+            <p>O que você gostaria de fazer hoje?</p>
+            <div class="d-grid gap-2 mt-3">
+                <a href="#" class="btn btn-success">Ir para o Painel</a>
+                <button class="btn btn-danger" onclick="logout()">Sair</button>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<!-- Bootstrap JS local - CAMINHO CORRIGIDO -->
+<script src="bootstrap/js/bootstrap.bundle.min.js"></script>
+<!-- Script principal - CAMINHO CORRIGIDO -->
+<script src="script.js"></script>
+</body>
+</html>
+

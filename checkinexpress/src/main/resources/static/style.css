@@ -1,5 +1,6 @@
 body {
-            background-color: #f8f9fa;
+            background-color: #0000000
+          ;
         }
         .container {
             box-shadow: 0 0 15px rgba(0,0,0,0.1);
@@ -21,14 +22,14 @@ body {
         .hero-section {
             position: relative;
             text-align: center;
-            color: white;
+            color: black;
         }
         .hero-text {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background-color: rgba(0, 0, 0, 0.5);
+            background-color: rgba(92, 225, 230, 0.8);
             padding: 20px;
             border-radius: 10px;
             width: 90%;
@@ -42,3 +43,22 @@ body {
         .advantage-icon {
             max-width: 80px;
         }
+
+/* Estilo para a prévia da imagem de perfil */
+#image-preview {
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+    border: 3px solid #dee2e6;
+}
+
+/* Estilos para os requisitos da senha */
+#password-requirements li.valid {
+    color: green;
+    text-decoration: line-through;
+}
+
+#password-requirements li.invalid {
+    color: #6c757d;
+    text-decoration: none;
+}
