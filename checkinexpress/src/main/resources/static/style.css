@@ -1,0 +1,44 @@
+body {
+            background-color: #f8f9fa;
+        }
+        .container {
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            background-color: #ffffff;
+            padding-left: 0;
+            padding-right: 0;
+            overflow: hidden;
+        }
+        .btn-custom-color {
+            background-color: #5ce1e6;
+            border-color: #5ce1e6;
+            color: #000;
+        }
+        .btn-custom-color:hover {
+            background-color: #4ab8bd;
+            border-color: #4ab8bd;
+            color: #000;
+        }
+        .hero-section {
+            position: relative;
+            text-align: center;
+            color: white;
+        }
+        .hero-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+        }
+        .hero-image {
+            width: 100%;
+            height: auto;
+            max-height: 50vh;
+            object-fit: cover;
+        }
+        .advantage-icon {
+            max-width: 80px;
+        }
