@@ -60,12 +60,9 @@ public class SecurityConfig {
 
                 // Define as regras de Autorização
                 .authorizeHttpRequests(auth -> auth
-                        // Permite acesso público ao registro e login
-                        .requestMatchers("/api/v1/auth/**").permitAll()
-                        // Regras baseadas em Role (ADMIN/USER)
+                        .requestMatchers("/usuarios/**").permitAll()
                         .requestMatchers("/api/v1/users/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/v1/users/**").hasAnyRole("USER", "ADMIN")
-                        // Todas as outras requisições devem estar autenticadas
                         .anyRequest().authenticated()
                 )
 
