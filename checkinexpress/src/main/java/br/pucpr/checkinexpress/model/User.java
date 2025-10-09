@@ -1,6 +1,6 @@
 package br.pucpr.checkinexpress.model;
 
-import br.pucpr.checkinexpress.security.Role;
+import br.pucpr.checkinexpress.security.Role; // Mantendo seu pacote original
 import jakarta.persistence.*;
 
 @Entity
@@ -10,11 +10,17 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @Column(nullable = false) // Nome não pode ser nulo
     private String name;
+
+    @Column(nullable = false, unique = true) // Email não pode ser nulo e deve ser único
     private String email;
+
+    @Column(nullable = false) // Senha não pode ser nula
     private String password;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false) // Role não pode ser nulo
     private Role role; // ADMIN ou USER
 
     // Getters e setters
