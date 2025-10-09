@@ -1,9 +1,12 @@
 package br.pucpr.checkinexpress.service;
 
+import br.pucpr.checkinexpress.dto.AdminCreateUserDTO;
 import br.pucpr.checkinexpress.dto.UserDTO;
 import br.pucpr.checkinexpress.model.User;
 import br.pucpr.checkinexpress.repository.UserRepository;
+import br.pucpr.checkinexpress.security.Role;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -30,9 +33,9 @@ public class UserService {
 
     public UserDTO salvar(UserDTO userDTO) {
         User user = new User();
-        user.setNome(userDTO.getNome());
+        user.setName(userDTO.getNome());
         user.setEmail(userDTO.getEmail());
-        user.setSenha(userDTO.getSenha());
+        user.setPassword(userDTO.getSenha());
         user.setRole(userDTO.getRole());
         userRepository.save(user);
         return new UserDTO(user);
@@ -42,9 +45,9 @@ public class UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
-        user.setNome(userDTO.getNome());
+        user.setName(userDTO.getNome());
         user.setEmail(userDTO.getEmail());
-        user.setSenha(userDTO.getSenha());
+        user.setPassword(userDTO.getSenha());
         user.setRole(userDTO.getRole());
         userRepository.save(user);
 
@@ -57,4 +60,35 @@ public class UserService {
         }
         userRepository.deleteById(id);
     }
+
+    // Exemplo em UserService.java
+
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder; // Adicionando injeção do PasswordEncoder
+
+    // Outros métodos ...
+
+    public UserDTO criarPorAdmin(AdminCreateUserDTO dto) {
+        // 1. Verifique se o email já existe (boa prática)
+
+        // 2. Crie a entidade User
+        User user = new User();
+        user.setName(dto.getName());
+        user.setEmail(dto.getEmail());
+        user.setPassword(passwordEncoder.encode(dto.getPassword())); // Lembre de injetar o passwordEncoder!
+
+        // 3. Mapeie a Role
+        user.setRole(Role.valueOf(dto.getRole())); // Converte a string "ADMIN" ou "USER" para o seu enum Role
+
+        // 4. Salve no repositório
+        User salvo = userRepository.save(user);
+
+        // 5. Retorne o DTO de resposta
+        return UserDTO.fromEntity(salvo); // Assumindo que você tem um método de mapeamento
+    }
 }
+

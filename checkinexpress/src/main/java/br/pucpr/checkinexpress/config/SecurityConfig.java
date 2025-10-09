@@ -51,19 +51,21 @@ public class SecurityConfig {
         return authProvider;
     }
 
-    // 4. BEAN: Cadeia de Filtros de Segurança (As Regras de Autorização)
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // Desabilita CSRF (usando a nova sintaxe de lambda)
-                .csrf(AbstractHttpConfigurer::disable)
+                // Desabilita CSRF para permitir POSTs via Postman
+                .csrf(csrf -> csrf.disable())
 
                 // Define as regras de Autorização
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/usuarios/**").permitAll()
+                        // Libera as rotas de autenticação (login, registro)
+                        .requestMatchers("/api/v1/auth/**").permitAll()  // Liberando o acesso às rotas de autenticação
+                        .requestMatchers("/usuarios/**").permitAll()  // Libera acesso a /usuarios
+                        // Requer autenticação para outras rotas
                         .requestMatchers("/api/v1/users/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/v1/users/**").hasAnyRole("USER", "ADMIN")
-                        .anyRequest().authenticated()
+                        .anyRequest().authenticated()  // Exige autenticação para outras rotas
                 )
 
                 // Define a política de sessão como STATELESS (para JWT)
@@ -74,7 +76,7 @@ public class SecurityConfig {
                 // Adiciona o provedor de autenticação customizado
                 .authenticationProvider(authenticationProvider())
 
-                // Adiciona o filtro JWT antes do filtro padrão de Username/Password
+                // Adiciona o filtro JWT antes da autenticação baseada em nome de usuário/senha
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

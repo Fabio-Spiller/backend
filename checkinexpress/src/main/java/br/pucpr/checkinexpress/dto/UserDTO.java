@@ -16,9 +16,13 @@ public class UserDTO {
 
     public UserDTO(User user) {
         this.id = Long.valueOf(user.getId());
-        this.nome = user.getNome();
+        this.nome = user.getName();
         this.email = user.getEmail();
-        this.senha = user.getSenha();
+        this.senha = user.getPassword();
         this.role = user.getRole();
+    }
+
+    public static UserDTO fromEntity(User user) {
+        return new UserDTO(user); // Usando o construtor para criar um UserDTO
     }
 }
