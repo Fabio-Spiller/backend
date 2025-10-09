@@ -1,12 +1,13 @@
 package br.pucpr.checkinexpress.config;
 
 import br.pucpr.checkinexpress.security.JwtAuthenticationFilter;
-import br.pucpr.checkinexpress.service.UserDetailsServiceImplementation; // Necessário para autenticação
+import br.pucpr.checkinexpress.service.UserDetailsServiceImplementation;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity; // <-- Adicionando esta anotação crucial!
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -19,53 +20,52 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity // Habilita o uso de @PreAuthorize em Controllers
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
-    private final UserDetailsServiceImplementation userDetailsService; // Implementação customizada
+    private final UserDetailsServiceImplementation userDetailsService;
 
-    // O UserDetailsServiceImplementation deve ser injetado para uso
     public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter, UserDetailsServiceImplementation userDetailsService) {
         this.jwtAuthFilter = jwtAuthFilter;
         this.userDetailsService = userDetailsService;
     }
 
-    // 1. BEAN: Password Encoder (CRUCIAL para criptografia de senha)
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    // 2. BEAN: Authentication Manager (CRUCIAL para o método login no AuthController)
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
 
-    // 3. BEAN: Provedor de Autenticação (Ensina o Spring a usar o nosso UserDetailsService e PasswordEncoder)
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(userDetailsService); // Informa onde buscar o usuário
-        authProvider.setPasswordEncoder(passwordEncoder());     // Informa como checar a senha criptografada
+        authProvider.setUserDetailsService(userDetailsService);
+        authProvider.setPasswordEncoder(passwordEncoder());
         return authProvider;
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // Desabilita CSRF para permitir POSTs via Postman
-                .csrf(csrf -> csrf.disable())
+                // Desabilita CSRF
+                .csrf(AbstractHttpConfigurer::disable)
 
                 // Define as regras de Autorização
                 .authorizeHttpRequests(auth -> auth
-                        // Libera as rotas de autenticação (login, registro)
-                        .requestMatchers("/api/v1/auth/**").permitAll()  // Liberando o acesso às rotas de autenticação
-                        .requestMatchers("/usuarios/**").permitAll()  // Libera acesso a /usuarios
-                        // Requer autenticação para outras rotas
-                        .requestMatchers("/api/v1/users/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/v1/users/**").hasAnyRole("USER", "ADMIN")
-                        .anyRequest().authenticated()  // Exige autenticação para outras rotas
+
+                        // 1. Libera as rotas de autenticação (login, registro)
+                        .requestMatchers("/api/v1/auth/**").permitAll()
+
+                        // 2. IMPORTANTE: Removemos a liberação de /usuarios/**
+                        // Agora, o filtro JWT processa o token antes que as regras do Controller (@PreAuthorize) sejam aplicadas.
+
+                        // 3. Qualquer outra requisição deve ser autenticada (via JWT)
+                        .anyRequest().authenticated()
                 )
 
                 // Define a política de sessão como STATELESS (para JWT)
@@ -76,7 +76,7 @@ public class SecurityConfig {
                 // Adiciona o provedor de autenticação customizado
                 .authenticationProvider(authenticationProvider())
 
-                // Adiciona o filtro JWT antes da autenticação baseada em nome de usuário/senha
+                // Adiciona o filtro JWT
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
