@@ -1,40 +1,60 @@
 package br.pucpr.checkinexpress.service;
 
+import br.pucpr.checkinexpress.dto.UserDTO;
 import br.pucpr.checkinexpress.model.User;
 import br.pucpr.checkinexpress.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
 
-    private final UserRepository userRepository;
+    @Autowired
+    private UserRepository userRepository;
 
-    // Injeção de dependência via Construtor
-    public UserService(UserRepository userRepository) {
-        this.userRepository = userRepository;
+    public List<UserDTO> listarTodos() {
+        return userRepository.findAll()
+                .stream()
+                .map(UserDTO::new)
+                .collect(Collectors.toList());
     }
 
-    /** CRUD: salvar/alterar (Método Save) */
-    public User save(User user) {
-        // Futuramente: Adicionar lógica de validação e criptografia de senha (security)
-        return userRepository.save(user);
+    public UserDTO buscarPorId(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+        return new UserDTO(user);
     }
 
-    /** CRUD: listar (Método FindAll) */
-    public List<User> findAll() {
-        return userRepository.findAll();
+    public UserDTO salvar(UserDTO userDTO) {
+        User user = new User();
+        user.setNome(userDTO.getNome());
+        user.setEmail(userDTO.getEmail());
+        user.setSenha(userDTO.getSenha());
+        user.setRole(userDTO.getRole());
+        userRepository.save(user);
+        return new UserDTO(user);
     }
 
-    /** CRUD: buscarPorId (Método FindById) */
-    public User findById(Integer id) {
-        // Retorna o usuário ou lança uma exceção se não for encontrado (para retornar HTTP 404)
-        return userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado com ID: " + id));
+    public UserDTO atualizar(Long id, UserDTO userDTO) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+        user.setNome(userDTO.getNome());
+        user.setEmail(userDTO.getEmail());
+        user.setSenha(userDTO.getSenha());
+        user.setRole(userDTO.getRole());
+        userRepository.save(user);
+
+        return new UserDTO(user);
     }
 
-    /** CRUD: excluir (Método Delete) */
-    public void delete(Integer id) {
+    public void excluir(Long id) {
+        if (!userRepository.existsById(id)) {
+            throw new RuntimeException("Usuário não encontrado");
+        }
         userRepository.deleteById(id);
     }
 }
