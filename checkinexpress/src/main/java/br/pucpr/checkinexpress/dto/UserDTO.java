@@ -2,7 +2,9 @@ package br.pucpr.checkinexpress.dto;
 
 import br.pucpr.checkinexpress.model.User;
 import br.pucpr.checkinexpress.security.Role;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor

@@ -18,6 +18,18 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
+    // ✅ Criar usuário
+    public UserDTO createUser(UserDTO dto) {
+        User user = new User();
+        user.setName(dto.getNome());
+        user.setEmail(dto.getEmail());
+        user.setPassword(dto.getSenha());
+        user.setRole(dto.getRole());
+        userRepository.save(user);
+        return new UserDTO(user);
+    }
+
+
     public List<UserDTO> listarTodos() {
         return userRepository.findAll()
                 .stream()
@@ -27,7 +39,7 @@ public class UserService {
 
     public UserDTO buscarPorId(Long id) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado com ID: " + id));
         return new UserDTO(user);
     }
 
@@ -41,16 +53,16 @@ public class UserService {
         return new UserDTO(user);
     }
 
-    public UserDTO atualizar(Long id, UserDTO userDTO) {
+    public UserDTO updateUser(Long id, UserDTO dto) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado com ID: " + id));
 
-        user.setName(userDTO.getNome());
-        user.setEmail(userDTO.getEmail());
-        user.setPassword(userDTO.getSenha());
-        user.setRole(userDTO.getRole());
+        if (dto.getNome() != null) user.setName(dto.getNome());
+        if (dto.getEmail() != null) user.setEmail(dto.getEmail());
+        if (dto.getSenha() != null) user.setPassword(dto.getSenha());
+        if (dto.getRole() != null) user.setRole(dto.getRole());
+
         userRepository.save(user);
-
         return new UserDTO(user);
     }
 
