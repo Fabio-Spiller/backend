@@ -26,33 +26,34 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
     }
 
-    // 🟢 Criar usuário como ADMIN
+    // 🔒 Criar usuário como ADMIN (apenas ADMIN pode)
     @PostMapping("/admin-create")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<UserDTO> criarUsuarioPorAdmin(@RequestBody @Valid AdminCreateUserDTO dto) {
-        UserDTO novo = userService.criarPorAdmin(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(novo);
+    public ResponseEntity<UserDTO> criarPorAdmin(@RequestBody AdminCreateUserDTO dto) {
+        return ResponseEntity.ok(userService.criarPorAdmin(dto));
     }
 
-    // 🟢 Listar todos os usuários
+    // 🔒 Listar todos os usuários (apenas ADMIN pode)
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<UserDTO>> listarTodos() {
-        List<UserDTO> usuarios = userService.listarTodos();
-        return ResponseEntity.ok(usuarios);
+        return ResponseEntity.ok(userService.listarTodos());
     }
 
-    // 🟢 Buscar usuário por ID
+    // 🔒 Buscar usuário por ID (ADMIN pode ver qualquer um, USER pode ver apenas o próprio)
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public ResponseEntity<UserDTO> buscarPorId(@PathVariable Long id) {
         UserDTO usuario = userService.buscarPorId(id);
         return ResponseEntity.ok(usuario);
     }
 
-    // 🟢 Atualizar usuário
+    // 🔒 Atualizar usuário (apenas o próprio usuário ou ADMIN)
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public ResponseEntity<UserDTO> atualizar(@PathVariable Long id, @RequestBody @Valid UserDTO userDTO) {
         UserDTO atualizado = userService.updateUser(id, userDTO);
         return ResponseEntity.ok(atualizado);
     }
-
 }
+

@@ -73,7 +73,6 @@ public class UserService {
         userRepository.deleteById(id);
     }
 
-    // Exemplo em UserService.java
 
 
     @Autowired
@@ -82,22 +81,18 @@ public class UserService {
     // Outros métodos ...
 
     public UserDTO criarPorAdmin(AdminCreateUserDTO dto) {
-        // 1. Verifique se o email já existe (boa prática)
+        if (userRepository.findByEmail(dto.getEmail()).isPresent()) {
+            throw new RuntimeException("Email já cadastrado: " + dto.getEmail());
+        }
 
-        // 2. Crie a entidade User
         User user = new User();
-        user.setName(dto.getName());
+        user.setName(dto.getNome());
         user.setEmail(dto.getEmail());
-        user.setPassword(passwordEncoder.encode(dto.getPassword())); // Lembre de injetar o passwordEncoder!
+        user.setPassword(passwordEncoder.encode(dto.getSenha()));
+        user.setRole(Role.valueOf(dto.getRole().toUpperCase()));
 
-        // 3. Mapeie a Role
-        user.setRole(Role.valueOf(dto.getRole())); // Converte a string "ADMIN" ou "USER" para o seu enum Role
-
-        // 4. Salve no repositório
         User salvo = userRepository.save(user);
-
-        // 5. Retorne o DTO de resposta
-        return UserDTO.fromEntity(salvo); // Assumindo que você tem um método de mapeamento
+        return new UserDTO(salvo);
     }
 }
 
