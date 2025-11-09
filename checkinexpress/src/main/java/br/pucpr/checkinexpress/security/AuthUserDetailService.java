@@ -6,6 +6,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import br.pucpr.checkinexpress.security.UserAuthentication; // IMPORTA SUA CLASSE DE AUTENTICAÇÃO
+import br.pucpr.checkinexpress.security.Role;
 
 @Service
 public class AuthUserDetailService implements UserDetailsService {
@@ -24,7 +26,7 @@ public class AuthUserDetailService implements UserDetailsService {
 
         // Mapeia a sua Entidade 'User' para a classe de segurança 'UserAuthentication'
         UserAuthentication auth = new UserAuthentication();
-        auth.setId(user.getId().intValue());
+        auth.setId(user.getId());
         auth.setEmail(user.getEmail());
         auth.setPassword(user.getSenha());
 

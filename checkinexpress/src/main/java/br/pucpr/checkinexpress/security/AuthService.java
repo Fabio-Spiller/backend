@@ -30,6 +30,6 @@ public class AuthService {
         String token = jwtService.generateToken(userDetails);
 
         // 4. Retorna a resposta
-        return new AuthResponse(token);
+        return new AuthResponse(token, "Bearer");
     }
 }
