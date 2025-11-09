@@ -7,11 +7,10 @@ import lombok.Data;
 @Data
 public class AuthRequest {
 
-    @Email
-    @NotBlank
+    @Email(message = "Email inválido.")
+    @NotBlank(message = "O email é obrigatório.")
     private String email;
 
-    @NotBlank
-    private String senha; // O campo na sua entidade User é 'senha'
-
+    @NotBlank(message = "A senha é obrigatória.")
+    private String senha;
 }

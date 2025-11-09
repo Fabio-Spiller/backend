@@ -1,4 +1,14 @@
 package br.pucpr.checkinexpress.repository;
 
-public class UserRepository {
+import br.pucpr.checkinexpress.model.User;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.Optional;
+
+@Repository
+public interface UserRepository extends JpaRepository<User, Long> {
+
+    // Método obrigatório para o login: buscar o usuário pelo email
+    Optional<User> findByEmail(String email);
 }
