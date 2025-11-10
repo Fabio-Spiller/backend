@@ -1,6 +1,5 @@
 package br.pucpr.checkinexpress.dto;
 
-// DTO para retornar o token gerado ao cliente
 public class LoginResponse {
 
     private String token;
