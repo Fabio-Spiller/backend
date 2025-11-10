@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
@@ -88,9 +89,12 @@ public class JwtService {
 
     /**
      * Converte a chave secreta para o formato Key exigido pelo JJWT.
+     * * CORREÇÃO: Foi removida a decodificação Base64 para chaves injetadas como texto simples
+     * do application.properties. O texto é convertido diretamente para bytes UTF-8.
      */
     private Key getSigningKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);
+        // Converte a string do application.properties em bytes usando UTF-8
+        byte[] keyBytes = SECRET_KEY.getBytes(StandardCharsets.UTF_8);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 }

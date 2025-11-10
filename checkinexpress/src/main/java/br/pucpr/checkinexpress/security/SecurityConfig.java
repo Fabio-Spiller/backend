@@ -3,7 +3,6 @@ package br.pucpr.checkinexpress.security;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -21,10 +20,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableMethodSecurity(securedEnabled = true)
 public class SecurityConfig {
 
-    // Injeta o filtro JWT que criamos (responsável por validar o token)
     private final JwtAuthenticationFilter jwtAuthFilter;
 
-    // Injeção de dependência do filtro via construtor
     public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter) {
         this.jwtAuthFilter = jwtAuthFilter;
     }
@@ -41,7 +38,7 @@ public class SecurityConfig {
                 // 1. Define as regras de autorização de requisições (quem pode acessar o quê)
                 .authorizeHttpRequests(auth -> auth
                         // Permite acesso público ao Login e ao Registro
-                        .requestMatchers("/api/login/**", "/api/user/register/**").permitAll()
+                        .requestMatchers("/api/user/login", "/api/user/register/**").permitAll()
 
                         // Permite acesso público a ferramentas de desenvolvimento (Swagger e H2)
                         .requestMatchers("/h2-console/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
@@ -58,7 +55,6 @@ public class SecurityConfig {
 
                 // 3. Adiciona o filtro JWT customizado antes do filtro de autenticação padrão
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-                .securityMatcher("/api/**")
 
                 // 4. Permite que o console H2 funcione (necessário para ver a interface gráfica)
                 .headers(headers -> headers
