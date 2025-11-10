@@ -7,6 +7,7 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <module name="checkinexpress (1) (pucpr.edu.br)" />
         <module name="checkinexpress" />
       </profile>
     </annotationProcessing>
@@ -14,6 +15,7 @@
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="checkinexpress" options="-parameters" />
+      <module name="checkinexpress (1) (pucpr.edu.br)" options="-parameters" />
     </option>
   </component>
 </project>

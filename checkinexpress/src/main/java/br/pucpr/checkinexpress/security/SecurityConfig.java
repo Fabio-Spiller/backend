@@ -42,8 +42,13 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Permite acesso público ao Login e ao Registro
                         .requestMatchers("/api/login/**", "/api/user/register/**").permitAll()
+
                         // Permite acesso público a ferramentas de desenvolvimento (Swagger e H2)
                         .requestMatchers("/h2-console/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+
+                        // Apenas ADMIN pode acessar /quartos
+                        .requestMatchers("/quartos/**").hasRole("ADMIN")
+
                         // Todas as outras requisições devem ser autenticadas (precisam de JWT)
                         .anyRequest().authenticated()
                 )
@@ -53,6 +58,7 @@ public class SecurityConfig {
 
                 // 3. Adiciona o filtro JWT customizado antes do filtro de autenticação padrão
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .securityMatcher("/api/**")
 
                 // 4. Permite que o console H2 funcione (necessário para ver a interface gráfica)
                 .headers(headers -> headers
