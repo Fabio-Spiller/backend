@@ -19,7 +19,7 @@ public class QuartoController {
 
     // Somente ADMIN pode acessar
     @Secured("ROLE_ADMIN")
-    @GetMapping("/quartos")
+    @GetMapping
     public List<Quarto> listarQuartos() {
         return quartoRepository.findAll();
     }

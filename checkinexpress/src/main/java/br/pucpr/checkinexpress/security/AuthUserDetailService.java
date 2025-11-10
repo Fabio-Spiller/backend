@@ -33,7 +33,7 @@ public class AuthUserDetailService implements UserDetailsService {
         // **IMPORTANTE**: Você precisa ter o campo 'Role' na sua entidade User para usar esta linha
         // auth.setRole(user.getRole());
         // Se ainda não tem, defina uma Role padrão temporariamente:
-        auth.setRole(Role.USER); // Assumindo que Role.USER existe
+        auth.setRole(user.getRole()); // Assumindo que Role.USER existe
 
         return auth;
     }
