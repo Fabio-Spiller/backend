@@ -1,24 +1,24 @@
 package br.pucpr.checkinexpress.service;
 
-import br.pucpr.checkinexpress.dto.UserRegisterRequest;
-import br.pucpr.checkinexpress.dto.UserUpdateRequest; // NOVO IMPORT
-import br.pucpr.checkinexpress.dto.LoginRequest; // NOVO
+import br.pucpr.checkinexpress.dto.LoginRequest;
 import br.pucpr.checkinexpress.dto.LoginResponse;
+import br.pucpr.checkinexpress.dto.UserRegisterRequest;
+import br.pucpr.checkinexpress.dto.UserUpdateRequest;
 import br.pucpr.checkinexpress.exception.BusinessException;
 import br.pucpr.checkinexpress.model.User;
 import br.pucpr.checkinexpress.repository.UserRepository;
+import br.pucpr.checkinexpress.security.JwtService;
 import br.pucpr.checkinexpress.security.Role;
-import br.pucpr.checkinexpress.security.JwtService; // NOVO
 import br.pucpr.checkinexpress.security.UserAuthentication;
-
-import org.springframework.security.authentication.AuthenticationManager; // NOVO
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken; // NOVO
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UsernameNotFoundException; // NOVO IMPORT
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -26,18 +26,38 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final AuthenticationManager authenticationManager; // NOVO
-    private final JwtService jwtService; // NOVO
+    private final AuthenticationManager authenticationManager;
+    private final JwtService jwtService;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, JwtService jwtService) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder,
+                       AuthenticationManager authenticationManager, JwtService jwtService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
     }
 
-    // --- C: CREATE (Método registerUser já existente) ---
+    // ----------------------------------------------------------------------
+    // --- MÉTODOS DE CRIAÇÃO (REGISTRO) ---
+    // ----------------------------------------------------------------------
+
+    // Rota pública: Cria um HÓSPEDE (Role padrão)
     public User registerUser(UserRegisterRequest request) {
+        return saveNewUser(request, Role.HOSPEDE);
+    }
+
+    // Rota protegida (por ADMIN): Cria um FUNCIONÁRIO (Método faltante no seu envio)
+    public User registerFuncionario(UserRegisterRequest request) {
+        return saveNewUser(request, Role.FUNCIONARIO);
+    }
+
+    // Rota protegida (por ADMIN): Cria um ADMIN (Método faltante no seu envio)
+    public User registerAdmin(UserRegisterRequest request) {
+        return saveNewUser(request, Role.ADMIN);
+    }
+
+    // Método auxiliar para evitar duplicação de código e lidar com a validação
+    private User saveNewUser(UserRegisterRequest request, Role role) {
         Optional<User> existingUser = userRepository.findByEmail(request.getEmail());
         if (existingUser.isPresent()) {
             throw new BusinessException("Email já cadastrado.");
@@ -50,84 +70,73 @@ public class UserService {
         String encodedPassword = passwordEncoder.encode(request.getSenha());
         user.setSenha(encodedPassword);
 
-        user.setRole(Role.HOSPEDE);
+        user.setRole(role); // Define a Role específica
 
         return userRepository.save(user);
     }
 
-    // --- LOGIN: Autentica e Gera o Token JWT ---
-    public LoginResponse authenticateAndGenerateToken(LoginRequest request) {
+    // ----------------------------------------------------------------------
+    // --- MÉTODOS DE AUTENTICAÇÃO E BUSCA ---
+    // ----------------------------------------------------------------------
 
-        // 1. AUTENTICAÇÃO:
-        // Lança exceção (AuthenticationException) se o usuário/senha estiver errado
+    // Autenticação e Geração de Token
+    public LoginResponse authenticateAndGenerateToken(LoginRequest request) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getSenha())
         );
 
-        // 2. RECUPERAÇÃO DOS DETALHES DO USUÁRIO:
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        UserAuthentication userAuth = (UserAuthentication) authentication.getPrincipal();
 
-        // 3. GERAÇÃO DO TOKEN JWT:
-        String jwtToken = jwtService.generateToken(userDetails);
+        String token = jwtService.generateToken(userAuth);
 
-        // 4. PREPARAÇÃO DA RESPOSTA:
-        String role = "";
-        String email = userDetails.getUsername();
-
-        // Se o objeto for a nossa implementação, pegamos a role
-        if (userDetails instanceof UserAuthentication) {
-            role = ((UserAuthentication) userDetails).getRole().name();
-        } else {
-            // Caso não seja, buscamos a role (depende da sua implementação, mas UserAuthentication é o padrão)
-            User user = userRepository.findByEmail(email)
-                    .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado após autenticação."));
-            role = user.getRole().name();
-        }
-
-
-        // Retorna o token, a role e o email
-        return new LoginResponse(jwtToken, role, email);
+        return new LoginResponse(
+                token,
+                userAuth.getRole().name(),
+                userAuth.getUsername()
+        );
     }
 
-    // ----------------------------------------------------------------------------------
-
-    // --- R: READ (Ler o perfil pelo ID) ---
+    // Leitura (READ): Busca o perfil pelo ID
     public User findById(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado com ID: " + id));
     }
 
-    // ----------------------------------------------------------------------------------
+    // Novo método de Leitura (READ): Lista usuários por Role (Método faltante no seu envio)
+    public List<User> findByRole(Role role) {
+        return userRepository.findByRole(role);
+    }
 
-    // --- U: UPDATE (Atualizar nome e/ou senha) ---
+    // ----------------------------------------------------------------------
+    // --- MÉTODOS DE ATUALIZAÇÃO E EXCLUSÃO ---
+    // ----------------------------------------------------------------------
+
+
+    @Transactional
+    // Atualização (UPDATE): Atualiza nome e/ou senha
     public User update(Long id, UserUpdateRequest request) {
-        // 1. Busca o usuário existente
-        User user = findById(id); // Reusa o método findById para garantir que o usuário existe
+        User user = findById(id);
 
-        // 2. Atualiza o nome
-        user.setNome(request.getNome());
+        if (request.getNome() != null && !request.getNome().isBlank()) {
+            user.setNome(request.getNome());
+        }
 
-        // 3. Verifica e atualiza a senha, se fornecida
         if (request.getNovaSenha() != null && !request.getNovaSenha().isBlank()) {
-            // Encripta a nova senha antes de salvar
             String encodedPassword = passwordEncoder.encode(request.getNovaSenha());
             user.setSenha(encodedPassword);
         }
 
-        // 4. Salva as alterações
         return userRepository.save(user);
     }
 
-    // ----------------------------------------------------------------------------------
-
-    // --- D: DELETE (Excluir conta) ---
+    @Transactional
+    // Exclusão (DELETE): Exclui a conta
     public void delete(Long id) {
-        // 1. Verifica se o usuário existe antes de tentar deletar
         if (!userRepository.existsById(id)) {
             throw new UsernameNotFoundException("Usuário não encontrado para exclusão com ID: " + id);
         }
-
-        // 2. Exclui a conta
         userRepository.deleteById(id);
     }
+
+
 }

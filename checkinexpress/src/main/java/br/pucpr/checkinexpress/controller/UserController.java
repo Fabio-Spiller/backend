@@ -5,6 +5,7 @@ import br.pucpr.checkinexpress.dto.UserUpdateRequest;
 import br.pucpr.checkinexpress.dto.LoginRequest; // Import Novo
 import br.pucpr.checkinexpress.dto.LoginResponse; // Import Novo
 import br.pucpr.checkinexpress.model.User;
+import br.pucpr.checkinexpress.security.Role;
 import br.pucpr.checkinexpress.service.UserService; // O serviço que irá autenticar
 import br.pucpr.checkinexpress.security.UserAuthentication;
 import jakarta.validation.Valid;
@@ -14,6 +15,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import br.pucpr.checkinexpress.exception.BusinessException;
+import org.springframework.security.access.annotation.Secured;
+
+import java.util.List;
+
 
 @RestController
 @RequestMapping("/api/user")
@@ -88,4 +93,64 @@ public class UserController {
         // Retorna 204 No Content, que é o padrão para exclusão bem-sucedida
         return ResponseEntity.noContent().build();
     }
+
+    // --- CRUD DE FUNCIONÁRIOS (RESTRITO AO ADMIN) ---
+// ----------------------------------------------------------------------------------
+    // --- C: CREATE (Registro de FUNCIONÁRIO) ---
+    @Secured("ROLE_ADMIN")
+    @PostMapping("/register-funcionario")
+    public ResponseEntity<User> registerFuncionario(@RequestBody @Valid UserRegisterRequest request) {
+        User newFuncionario = userService.registerFuncionario(request);
+        return new ResponseEntity<>(newFuncionario, HttpStatus.CREATED);
+    }
+
+    // --- R: READ (Listar todos os FUNCIONARIOs) ---
+    @Secured("ROLE_ADMIN")
+    @GetMapping("/funcionarios")
+    public ResponseEntity<List<User>> getAllFuncionarios() {
+        // Busca apenas usuários com a Role FUNCIONARIO
+        List<User> funcionarios = userService.findByRole(Role.FUNCIONARIO);
+        return ResponseEntity.ok(funcionarios);
+    }
+
+    // --- R: READ (Ler um FUNCIONARIO/ADMIN pelo ID) ---
+    @Secured("ROLE_ADMIN")
+    @GetMapping("/funcionarios/{id}")
+    public ResponseEntity<User> getFuncionarioById(@PathVariable Long id) {
+        User funcionario = userService.findById(id);
+
+        // Regra de Negócio: Impede que esta rota seja usada para buscar HÓSPEDES
+        if (funcionario.getRole() == Role.HOSPEDE) {
+            throw new BusinessException("Acesso negado: ID pertence a um Hóspede.");
+        }
+
+        return ResponseEntity.ok(funcionario);
+    }
+
+    // --- U: UPDATE (Atualizar FUNCIONARIO/ADMIN por ID) ---
+    @Secured("ROLE_ADMIN")
+    @PutMapping("/funcionarios/{id}")
+    public ResponseEntity<User> updateFuncionario(@PathVariable Long id, @RequestBody @Valid UserUpdateRequest request) {
+        User updatedUser = userService.update(id, request);
+
+        if (updatedUser.getRole() == Role.HOSPEDE) {
+            throw new BusinessException("Acesso negado: ID pertence a um Hóspede.");
+        }
+
+        return ResponseEntity.ok(updatedUser);
+    }
+
+    // --- D: DELETE (Deletar FUNCIONARIO/ADMIN por ID) ---
+    @Secured("ROLE_ADMIN")
+    @DeleteMapping("/funcionarios/{id}")
+    public ResponseEntity<Void> deleteFuncionario(@PathVariable Long id) {
+        User userToDelete = userService.findById(id);
+        if (userToDelete.getRole() == Role.HOSPEDE) {
+            throw new BusinessException("Acesso negado: Não é permitido deletar um Hóspede por esta rota.");
+        }
+
+        userService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+
 }
