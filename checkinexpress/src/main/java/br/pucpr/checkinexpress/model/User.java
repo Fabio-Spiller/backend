@@ -25,7 +25,7 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "ROLE", nullable = false)
-    private Role role = Role.USER; // Adicionando o campo Role
+    private Role role = Role.HOSPEDE; // Adicionando o campo Role
 
     // Outros campos como idade, etc.
 }

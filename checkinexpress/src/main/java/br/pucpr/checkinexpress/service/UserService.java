@@ -50,7 +50,7 @@ public class UserService {
         String encodedPassword = passwordEncoder.encode(request.getSenha());
         user.setSenha(encodedPassword);
 
-        user.setRole(Role.USER);
+        user.setRole(Role.HOSPEDE);
 
         return userRepository.save(user);
     }

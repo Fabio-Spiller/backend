@@ -44,7 +44,7 @@ public class SecurityConfig {
                         .requestMatchers("/h2-console/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
 
                         // Apenas ADMIN pode acessar /quartos
-                        .requestMatchers("/quartos/**").hasRole("ADMIN")
+                        .requestMatchers("/quartos/**").hasAnyRole("ADMIN", "FUNCIONARIO")
 
                         // Todas as outras requisições devem ser autenticadas (precisam de JWT)
                         .anyRequest().authenticated()
