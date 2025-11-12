@@ -2,11 +2,13 @@ package br.pucpr.checkinexpress.controller;
 
 import br.pucpr.checkinexpress.dto.UserRegisterRequest;
 import br.pucpr.checkinexpress.dto.UserUpdateRequest;
-import br.pucpr.checkinexpress.dto.LoginRequest; // Import Novo
-import br.pucpr.checkinexpress.dto.LoginResponse; // Import Novo
+import br.pucpr.checkinexpress.dto.FuncionarioUpdateRequest; // NOVO IMPORT
+import br.pucpr.checkinexpress.dto.LoginRequest;
+import br.pucpr.checkinexpress.dto.LoginResponse;
 import br.pucpr.checkinexpress.model.User;
+import br.pucpr.checkinexpress.model.Funcionario; // NOVO IMPORT
 import br.pucpr.checkinexpress.security.Role;
-import br.pucpr.checkinexpress.service.UserService; // O serviço que irá autenticar
+import br.pucpr.checkinexpress.service.UserService;
 import br.pucpr.checkinexpress.security.UserAuthentication;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -26,7 +28,6 @@ public class UserController {
 
     private final UserService userService;
 
-    // Assumindo que o UserService tem o método de login
     public UserController(UserService userService) {
         this.userService = userService;
     }
@@ -35,67 +36,64 @@ public class UserController {
     private Long getAuthenticatedUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        // Verifica se o objeto principal é a sua implementação UserAuthentication
         if (authentication != null && authentication.getPrincipal() instanceof UserAuthentication) {
             UserAuthentication userAuth = (UserAuthentication) authentication.getPrincipal();
             return userAuth.getId();
         }
 
-        // Se, por algum motivo, não conseguir obter o usuário, lança um erro
         throw new RuntimeException("Não foi possível obter o ID do usuário autenticado.");
     }
 
 // ----------------------------------------------------------------------------------
+// --- ENDPOINTS DE AUTENTICAÇÃO E REGISTRO DE HÓSPEDES ---
+// ----------------------------------------------------------------------------------
 
-    // --- C: CREATE (Registro) - Rota pública ---
+    // --- C: CREATE (Registro de HÓSPEDE) - Rota pública ---
     @PostMapping("/register")
     public ResponseEntity<User> register(@RequestBody @Valid UserRegisterRequest request) {
         User newUser = userService.registerUser(request);
         return new ResponseEntity<>(newUser, HttpStatus.CREATED);
     }
 
-// ----------------------------------------------------------------------------------
-
+    // --- LOGIN: Rota pública para autenticação ---
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@RequestBody @Valid LoginRequest request) {
-        // Você PRECISA implementar o método authenticateAndGenerateToken no UserService
         LoginResponse response = userService.authenticateAndGenerateToken(request);
         return ResponseEntity.ok(response);
     }
 
-    // --- R: READ (Ler Perfil do Usuário Logado) - Rota Protegida ---
+// ----------------------------------------------------------------------------------
+// --- GERENCIAMENTO DO PRÓPRIO PERFIL ---
+// ----------------------------------------------------------------------------------
+
+    // --- R: READ (Ler Perfil do Usuário Logado) ---
     @GetMapping("/profile")
     public ResponseEntity<User> getProfile() {
-        // Usa o ID do usuário logado para buscar os dados
         Long userId = getAuthenticatedUserId();
         User user = userService.findById(userId);
         return ResponseEntity.ok(user);
     }
 
-// ----------------------------------------------------------------------------------
-
-    // --- U: UPDATE (Atualizar Perfil) - Rota Protegida ---
+    // --- U: UPDATE (Atualizar Perfil) ---
     @PutMapping("/profile")
     public ResponseEntity<User> updateProfile(@RequestBody @Valid UserUpdateRequest request) {
         Long userId = getAuthenticatedUserId();
-        // Chama o serviço para atualizar o nome e/ou a senha
         User updatedUser = userService.update(userId, request);
         return ResponseEntity.ok(updatedUser);
     }
 
-// ----------------------------------------------------------------------------------
-
-    // --- D: DELETE (Excluir Conta) - Rota Protegida ---
+    // --- D: DELETE (Excluir Conta) ---
     @DeleteMapping("/profile")
     public ResponseEntity<Void> deleteProfile() {
         Long userId = getAuthenticatedUserId();
         userService.delete(userId);
-        // Retorna 204 No Content, que é o padrão para exclusão bem-sucedida
         return ResponseEntity.noContent().build();
     }
 
-    // --- CRUD DE FUNCIONÁRIOS (RESTRITO AO ADMIN) ---
 // ----------------------------------------------------------------------------------
+// --- CRUD DE FUNCIONÁRIOS/ADMINS (RESTRITO AO ADMIN) ---
+// ----------------------------------------------------------------------------------
+
     // --- C: CREATE (Registro de FUNCIONÁRIO) ---
     @Secured("ROLE_ADMIN")
     @PostMapping("/register-funcionario")
@@ -104,11 +102,18 @@ public class UserController {
         return new ResponseEntity<>(newFuncionario, HttpStatus.CREATED);
     }
 
+    // --- C: CREATE (Registro de ADMIN) --- // ADICIONADO
+    @Secured("ROLE_ADMIN")
+    @PostMapping("/register-admin")
+    public ResponseEntity<User> registerAdmin(@RequestBody @Valid UserRegisterRequest request) {
+        User newAdmin = userService.registerAdmin(request);
+        return new ResponseEntity<>(newAdmin, HttpStatus.CREATED);
+    }
+
     // --- R: READ (Listar todos os FUNCIONARIOs) ---
     @Secured("ROLE_ADMIN")
     @GetMapping("/funcionarios")
     public ResponseEntity<List<User>> getAllFuncionarios() {
-        // Busca apenas usuários com a Role FUNCIONARIO
         List<User> funcionarios = userService.findByRole(Role.FUNCIONARIO);
         return ResponseEntity.ok(funcionarios);
     }
@@ -119,7 +124,6 @@ public class UserController {
     public ResponseEntity<User> getFuncionarioById(@PathVariable Long id) {
         User funcionario = userService.findById(id);
 
-        // Regra de Negócio: Impede que esta rota seja usada para buscar HÓSPEDES
         if (funcionario.getRole() == Role.HOSPEDE) {
             throw new BusinessException("Acesso negado: ID pertence a um Hóspede.");
         }
@@ -127,7 +131,7 @@ public class UserController {
         return ResponseEntity.ok(funcionario);
     }
 
-    // --- U: UPDATE (Atualizar FUNCIONARIO/ADMIN por ID) ---
+    // --- U: UPDATE (Atualizar Nome e Senha do FUNCIONARIO/ADMIN por ID) ---
     @Secured("ROLE_ADMIN")
     @PutMapping("/funcionarios/{id}")
     public ResponseEntity<User> updateFuncionario(@PathVariable Long id, @RequestBody @Valid UserUpdateRequest request) {
@@ -138,6 +142,15 @@ public class UserController {
         }
 
         return ResponseEntity.ok(updatedUser);
+    }
+
+    // --- NOVO ENDPOINT: Atualizar Cargo e Salário do FUNCIONARIO/ADMIN por ID ---
+    @Secured("ROLE_ADMIN")
+    @PutMapping("/funcionarios/{id}/details")
+    public ResponseEntity<Funcionario> updateFuncionarioDetails(@PathVariable Long id, @RequestBody @Valid FuncionarioUpdateRequest request) {
+        // O Service já faz a verificação se o usuário é FUNCIONARIO/ADMIN
+        Funcionario updatedFuncionario = userService.updateFuncionarioDetails(id, request);
+        return ResponseEntity.ok(updatedFuncionario);
     }
 
     // --- D: DELETE (Deletar FUNCIONARIO/ADMIN por ID) ---
@@ -152,5 +165,4 @@ public class UserController {
         userService.delete(id);
         return ResponseEntity.noContent().build();
     }
-
 }

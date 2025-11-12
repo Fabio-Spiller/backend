@@ -37,16 +37,23 @@ public class SecurityConfig {
 
                 // 1. Define as regras de autorização de requisições (quem pode acessar o quê)
                 .authorizeHttpRequests(auth -> auth
-                        // Permite acesso público ao Login e ao Registro
-                        .requestMatchers("/api/user/login", "/api/user/register/**").permitAll()
+                        // Permite acesso público ao Login e ao Registro de Hóspedes
+                        .requestMatchers("/api/user/login", "/api/user/register").permitAll()
 
                         // Permite acesso público a ferramentas de desenvolvimento (Swagger e H2)
                         .requestMatchers("/h2-console/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
 
-                        // Apenas ADMIN pode acessar /quartos
+                        // --- NOVAS REGRAS DE AUTENTICAÇÃO (PROTEGIDO POR JWT) ---
+
+                        // Rotas de CRUD de Funcionário/Admin (Exige JWT válido, a Role é checada via @Secured no Controller)
+                        // Inclui /register-funcionario, /funcionarios/*, /funcionarios/*/*
+                        .requestMatchers("/api/user/register-funcionario", "/api/user/register-admin").authenticated()
+                        .requestMatchers("/api/user/funcionarios/**").authenticated()
+
+                        // Acesso para FUNCIONARIO e ADMIN (serviços de quarto, etc.)
                         .requestMatchers("/quartos/**").hasAnyRole("ADMIN", "FUNCIONARIO")
 
-                        // Todas as outras requisições devem ser autenticadas (precisam de JWT)
+                        // Todas as outras requisições devem ser autenticadas (como /profile, /profile/delete, /profile/update)
                         .anyRequest().authenticated()
                 )
 
