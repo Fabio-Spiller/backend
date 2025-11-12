@@ -45,6 +45,9 @@ public class SecurityConfig {
 
                         // --- NOVAS REGRAS DE AUTENTICAÇÃO (PROTEGIDO POR JWT) ---
 
+                        // Rotas do CRUD de Serviços: Exige JWT válido para todas, a restrição de Role
+                        .requestMatchers("/api/servicos/**").authenticated()
+
                         // Rotas de CRUD de Funcionário/Admin (Exige JWT válido, a Role é checada via @Secured no Controller)
                         // Inclui /register-funcionario, /funcionarios/*, /funcionarios/*/*
                         .requestMatchers("/api/user/register-funcionario", "/api/user/register-admin").authenticated()
