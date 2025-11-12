@@ -5,6 +5,8 @@ import br.pucpr.checkinexpress.dto.UserUpdateRequest;
 import br.pucpr.checkinexpress.dto.FuncionarioUpdateRequest; // NOVO IMPORT
 import br.pucpr.checkinexpress.dto.LoginRequest;
 import br.pucpr.checkinexpress.dto.LoginResponse;
+import br.pucpr.checkinexpress.model.Quarto;
+import br.pucpr.checkinexpress.model.TipoQuarto;
 import br.pucpr.checkinexpress.model.User;
 import br.pucpr.checkinexpress.model.Funcionario; // NOVO IMPORT
 import br.pucpr.checkinexpress.security.Role;
@@ -20,6 +22,7 @@ import br.pucpr.checkinexpress.exception.BusinessException;
 import org.springframework.security.access.annotation.Secured;
 
 import java.util.List;
+import java.util.Optional;
 
 
 @RestController
@@ -60,6 +63,32 @@ public class UserController {
     public ResponseEntity<LoginResponse> login(@RequestBody @Valid LoginRequest request) {
         LoginResponse response = userService.authenticateAndGenerateToken(request);
         return ResponseEntity.ok(response);
+    }
+
+    @Secured("ROLE_ADMIN")
+    @GetMapping
+    public List<User> listarTodos() {
+        return userService.listarTodos();
+    }
+
+    @Secured("ROLE_ADMIN")
+    @GetMapping("/{id}")
+    public User buscarPorId(@PathVariable Long id) {
+        return userService.buscarPorId(id)
+                .orElseThrow(() -> new RuntimeException("Quarto não encontrado"));
+    }
+
+    @Secured("ROLE_ADMIN")
+    @PutMapping("/{id}")
+    public User atualizar(@PathVariable Long id, @RequestBody User user) {
+        return userService.atualizar(id, user);
+    }
+
+    // 🔹 Deletar quarto
+    @Secured("ROLE_ADMIN")
+    @DeleteMapping("/{id}")
+    public void deletar(@PathVariable Long id) {
+        userService.deletar(id);
     }
 
 // ----------------------------------------------------------------------------------

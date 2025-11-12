@@ -7,6 +7,8 @@ import br.pucpr.checkinexpress.dto.UserUpdateRequest;
 import br.pucpr.checkinexpress.dto.FuncionarioUpdateRequest; // NOVO IMPORT NECESSÁRIO
 import br.pucpr.checkinexpress.exception.BusinessException;
 import br.pucpr.checkinexpress.model.Funcionario;
+import br.pucpr.checkinexpress.model.Quarto;
+import br.pucpr.checkinexpress.model.TipoQuarto;
 import br.pucpr.checkinexpress.model.User;
 import br.pucpr.checkinexpress.repository.FuncionarioRepository;
 import br.pucpr.checkinexpress.repository.UserRepository;
@@ -52,6 +54,32 @@ public class UserService {
     // Rota pública: Cria um HÓSPEDE (Role padrão)
     public User registerUser(UserRegisterRequest request) {
         return saveNewUser(request, Role.HOSPEDE);
+    }
+
+    public List<User> listarTodos() {
+        return userRepository.findAll();
+    }
+
+    public Optional<User> buscarPorId(Long id) {
+        return userRepository.findById(id);
+    }
+
+    public User atualizar(Long id, User novoUser) {
+        return userRepository.findById(id).map(q -> {
+            q.setEmail(novoUser.getEmail());
+            q.setNome(novoUser.getNome());
+            q.setRole(novoUser.getRole());
+            q.setSenha(novoUser.getSenha());
+
+            return userRepository.save(q);
+        }).orElseThrow(() -> new RuntimeException("Quarto não encontrado"));
+    }
+
+    public void deletar(Long id) {
+        if (!userRepository.existsById(id)) {
+            throw new RuntimeException("Tipo de quarto não encontrado");
+        }
+        userRepository.deleteById(id);
     }
 
     @Transactional

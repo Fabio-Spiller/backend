@@ -45,6 +45,9 @@ public class SecurityConfig {
 
                         // --- NOVAS REGRAS DE AUTENTICAÇÃO (PROTEGIDO POR JWT) ---
 
+                        // Rotas de Pagamentos: Exige JWT válido. A restrição de Role é feita via @Secured no Controller.
+                        .requestMatchers("/api/pagamentos/**").authenticated() // <-- REGRA ADICIONADA
+
                         // Rotas do CRUD de Serviços: Exige JWT válido para todas, a restrição de Role
                         .requestMatchers("/api/servicos/**").authenticated()
 
