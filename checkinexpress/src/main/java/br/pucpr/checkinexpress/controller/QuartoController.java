@@ -17,39 +17,45 @@ public class QuartoController {
         this.quartoService = quartoService;
     }
 
-    // 🔹 Listar todos
     @Secured("ROLE_ADMIN")
     @GetMapping
-    public List<Quarto> listarTodos() {
-        return quartoService.listarTodos();
+    public List<Quarto> listarQuartos() {
+        return quartoService.listar();
     }
 
-    // 🔹 Buscar por ID
     @Secured("ROLE_ADMIN")
     @GetMapping("/{id}")
-    public Quarto buscarPorId(@PathVariable Long id) {
-        return quartoService.buscarPorId(id)
-                .orElseThrow(() -> new RuntimeException("Quarto não encontrado"));
+    public Quarto buscarPorId(@PathVariable int id) {
+        return quartoService.buscarPorId(id);
     }
 
-    // 🔹 Criar novo quarto
     @Secured("ROLE_ADMIN")
     @PostMapping
-    public Quarto salvar(@RequestBody Quarto quarto) {
-        return quartoService.salvar(quarto);
+    public Quarto criarQuarto(@RequestBody Quarto quarto) {
+        return quartoService.criar(quarto);
     }
 
-    // 🔹 Atualizar quarto existente
     @Secured("ROLE_ADMIN")
     @PutMapping("/{id}")
-    public Quarto atualizar(@PathVariable Long id, @RequestBody Quarto quarto) {
-        return quartoService.atualizar(id, quarto);
+    public Quarto atualizarQuarto(@PathVariable int id, @RequestBody Quarto quartoAtualizado) {
+        return quartoService.atualizar(id, quartoAtualizado);
     }
 
-    // 🔹 Deletar quarto
     @Secured("ROLE_ADMIN")
     @DeleteMapping("/{id}")
-    public void deletar(@PathVariable Long id) {
+    public void deletarQuarto(@PathVariable int id) {
         quartoService.deletar(id);
+    }
+
+    @Secured("ROLE_ADMIN")
+    @PutMapping("/{id}/ocupar/{idHospede}")
+    public Quarto ocuparQuarto(@PathVariable int id, @PathVariable int idHospede) {
+        return quartoService.ocupar(id, idHospede);
+    }
+
+    @Secured("ROLE_ADMIN")
+    @PutMapping("/{id}/liberar")
+    public Quarto liberarQuarto(@PathVariable int id) {
+        return quartoService.liberar(id);
     }
 }

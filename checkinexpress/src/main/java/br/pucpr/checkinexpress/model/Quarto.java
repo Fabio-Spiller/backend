@@ -28,4 +28,9 @@ public class Quarto {
     @ManyToOne
     @JoinColumn(name = "TIPO_ID", nullable = false)
     private TipoQuarto tipo;
+
+    //relacionamento com o hospede
+    @ManyToOne
+    @JoinColumn(name = "HOSPEDE_ID", nullable = true)
+    private User hospede;
 }
