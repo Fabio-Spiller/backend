@@ -25,7 +25,7 @@ public class QuartoController {
 
     @Secured("ROLE_ADMIN")
     @GetMapping("/{id}")
-    public Quarto buscarPorId(@PathVariable int id) {
+    public Quarto buscarPorId(@PathVariable long id) {
         return quartoService.buscarPorId(id);
     }
 
@@ -37,25 +37,25 @@ public class QuartoController {
 
     @Secured("ROLE_ADMIN")
     @PutMapping("/{id}")
-    public Quarto atualizarQuarto(@PathVariable int id, @RequestBody Quarto quartoAtualizado) {
+    public Quarto atualizarQuarto(@PathVariable long id, @RequestBody Quarto quartoAtualizado) {
         return quartoService.atualizar(id, quartoAtualizado);
     }
 
     @Secured("ROLE_ADMIN")
     @DeleteMapping("/{id}")
-    public void deletarQuarto(@PathVariable int id) {
+    public void deletarQuarto(@PathVariable long id) {
         quartoService.deletar(id);
     }
 
     @Secured("ROLE_ADMIN")
     @PutMapping("/{id}/ocupar/{idHospede}")
-    public Quarto ocuparQuarto(@PathVariable int id, @PathVariable int idHospede) {
+    public Quarto ocuparQuarto(@PathVariable long id, @PathVariable int idHospede) {
         return quartoService.ocupar(id, idHospede);
     }
 
     @Secured("ROLE_ADMIN")
     @PutMapping("/{id}/liberar")
-    public Quarto liberarQuarto(@PathVariable int id) {
+    public Quarto liberarQuarto(@PathVariable long id) {
         return quartoService.liberar(id);
     }
 }

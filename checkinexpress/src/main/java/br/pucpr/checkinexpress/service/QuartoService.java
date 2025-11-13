@@ -28,8 +28,8 @@ public class QuartoService {
         return quartoRepository.findAll();
     }
 
-    public Quarto buscarPorId(int id) {
-        return quartoRepository.findById((long) id)
+    public Quarto buscarPorId(long id) {
+        return quartoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Quarto não encontrado!"));
     }
 
@@ -44,8 +44,8 @@ public class QuartoService {
 
         return quartoRepository.save(quarto);
     }
-    public Quarto atualizar(int id, Quarto quartoAtualizado) {
-        Quarto quarto = buscarPorId(id);
+    public Quarto atualizar(long id, Quarto quartoAtualizado) {
+        Quarto quarto = buscarPorId( id);
 
         quarto.setNumero(quartoAtualizado.getNumero());
         quarto.setAndar(quartoAtualizado.getAndar());
@@ -56,11 +56,11 @@ public class QuartoService {
         return quartoRepository.save(quarto);
     }
 
-    public void deletar(int id) {
+    public void deletar(long id) {
         quartoRepository.deleteById((long)id);
     }
 
-    public Quarto ocupar(int id, int idHospede) {
+    public Quarto ocupar(long id, long idHospede) {
         Quarto quarto = buscarPorId(id);
         quarto.setHospede(userRepository.findById((long) idHospede)
                 .orElseThrow(() -> new RuntimeException("Hóspede não encontrado!")));
@@ -68,7 +68,7 @@ public class QuartoService {
         return quartoRepository.save(quarto);
     }
 
-    public Quarto liberar(int id) {
+    public Quarto liberar(long id) {
         Quarto quarto = buscarPorId(id);
         quarto.setHospede(null);
         quarto.setRole(Role_disponivel.livre);

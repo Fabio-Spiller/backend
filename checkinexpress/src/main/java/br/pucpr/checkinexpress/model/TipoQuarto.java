@@ -11,7 +11,7 @@ public class TipoQuarto {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ID")
-    private int id;
+    private long id;
 
     @Column(name = "NOME", nullable = false, unique = true)
     private String nome; // Ex: Standard, Luxo, Suíte Master

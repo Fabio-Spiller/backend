@@ -12,7 +12,7 @@ public class Quarto {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ID")
-    private int id;
+    private long id;
 
     @Column(name = "NUMERO", nullable = false, unique = true)
     private String numero; // Ex: "101", "203B"
