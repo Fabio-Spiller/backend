@@ -4,11 +4,9 @@ import br.pucpr.checkinexpress.dto.LoginRequest;
 import br.pucpr.checkinexpress.dto.LoginResponse;
 import br.pucpr.checkinexpress.dto.UserRegisterRequest;
 import br.pucpr.checkinexpress.dto.UserUpdateRequest;
-import br.pucpr.checkinexpress.dto.FuncionarioUpdateRequest; // NOVO IMPORT NECESSÁRIO
+import br.pucpr.checkinexpress.dto.FuncionarioUpdateRequest;
 import br.pucpr.checkinexpress.exception.BusinessException;
 import br.pucpr.checkinexpress.model.Funcionario;
-import br.pucpr.checkinexpress.model.Quarto;
-import br.pucpr.checkinexpress.model.TipoQuarto;
 import br.pucpr.checkinexpress.model.User;
 import br.pucpr.checkinexpress.repository.FuncionarioRepository;
 import br.pucpr.checkinexpress.repository.UserRepository;
@@ -64,20 +62,43 @@ public class UserService {
         return userRepository.findById(id);
     }
 
+    /**
+     * ATENÇÃO: Este método de atualização está usando a entidade User.
+     * É CRUCIAL que a senha seja criptografada se for alterada.
+     * * IDEALMENTE, você deve usar o método update abaixo que utiliza UserUpdateRequest
+     * e o campo 'novaSenha'.
+     *
+     * @param id ID do usuário a ser atualizado.
+     * @param novoUser Entidade User com os novos dados.
+     * @return O usuário atualizado e salvo no banco.
+     */
     public User atualizar(Long id, User novoUser) {
-        return userRepository.findById(id).map(q -> {
-            q.setEmail(novoUser.getEmail());
-            q.setNome(novoUser.getNome());
-            q.setRole(novoUser.getRole());
-            q.setSenha(novoUser.getSenha());
+        return userRepository.findById(id).map(usuarioExistente -> {
+            usuarioExistente.setEmail(novoUser.getEmail());
+            usuarioExistente.setNome(novoUser.getNome());
 
-            return userRepository.save(q);
-        }).orElseThrow(() -> new RuntimeException("Quarto não encontrado"));
+            // SE a senha no objeto de entrada (novoUser) não for nula/vazia,
+            // ou se for diferente da senha existente (o que não é prático, mas...)
+            if (novoUser.getSenha() != null && !novoUser.getSenha().isBlank()) {
+                // 🔐 AQUI ESTÁ A CORREÇÃO: CRIPTOGRAFA A SENHA
+                String encodedPassword = passwordEncoder.encode(novoUser.getSenha());
+                usuarioExistente.setSenha(encodedPassword);
+            } else {
+                // Se a nova senha for nula/vazia, mantém a senha criptografada existente.
+            }
+
+            // A Role também deve ser tratada com cuidado, geralmente só ADMIN pode mudar.
+            usuarioExistente.setRole(novoUser.getRole());
+
+            return userRepository.save(usuarioExistente);
+        }).orElseThrow(() -> new BusinessException("Usuário não encontrado com ID: " + id));
     }
+
 
     public void deletar(Long id) {
         if (!userRepository.existsById(id)) {
-            throw new RuntimeException("Tipo de quarto não encontrado");
+            // Alterado para lançar BusinessException, seguindo o padrão do seu projeto
+            throw new BusinessException("Usuário não encontrado.");
         }
         userRepository.deleteById(id);
     }
@@ -87,11 +108,8 @@ public class UserService {
     public User registerFuncionario(UserRegisterRequest request) {
         User user = saveNewUser(request, Role.FUNCIONARIO);
 
-        // ** NOVO PASSO: Salvar dados específicos na tabela Funcionario **
         // Corrigido para inicializar com valores padrão caso o DTO de registro não os tenha.
         Funcionario funcionario = new Funcionario(user, LocalDate.now());
-        // Ajustado para usar os getters do UserRegisterRequest caso você os tenha adicionado:
-        // Se você não adicionou cargo e salario no UserRegisterRequest, estes serão os valores padrão
         funcionario.setCargo(request.getCargo() != null ? request.getCargo() : "Atendente");
         funcionario.setSalario(request.getSalario() != null ? request.getSalario() : 0.0);
         funcionarioRepository.save(funcionario);
@@ -170,7 +188,7 @@ public class UserService {
     // ----------------------------------------------------------------------
 
     @Transactional
-    // Atualização (UPDATE): Atualiza nome e/ou senha
+    // Atualização (UPDATE): Atualiza nome e/ou senha (Este já estava correto)
     public User update(Long id, UserUpdateRequest request) {
         User user = findById(id);
 
@@ -178,6 +196,7 @@ public class UserService {
             user.setNome(request.getNome());
         }
 
+        // Criptografia aplicada no método original 'update'
         if (request.getNovaSenha() != null && !request.getNovaSenha().isBlank()) {
             String encodedPassword = passwordEncoder.encode(request.getNovaSenha());
             user.setSenha(encodedPassword);
@@ -202,8 +221,12 @@ public class UserService {
                 .orElseThrow(() -> new BusinessException("Registro de Funcionário não encontrado para o ID: " + userId));
 
         // 4. Aplica as atualizações
-        funcionario.setCargo(request.getCargo());
-        funcionario.setSalario(request.getSalario());
+        if (request.getCargo() != null && !request.getCargo().isBlank()) {
+            funcionario.setCargo(request.getCargo());
+        }
+        if (request.getSalario() != null) {
+            funcionario.setSalario(request.getSalario());
+        }
 
         // 5. Salva no repositório de Funcionário
         return funcionarioRepository.save(funcionario);
