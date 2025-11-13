@@ -73,8 +73,8 @@ public class PagamentoService {
         if (pagamento.getStatus() == StatusPagamento.CANCELADO) {
             throw new BusinessException(HttpStatus.BAD_REQUEST, "Não é possível alterar o status de um pagamento que já foi CANCELADO.");
         }
-
-        pagamento.setStatus(request.getStatus());
+        pagamento.setTipoPagamento(pagamento.getTipoPagamento());
+        pagamento.setStatus(pagamento.getStatus());
         return pagamentoRepository.save(pagamento);
     }
 
